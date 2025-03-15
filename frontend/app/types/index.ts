@@ -1,35 +1,46 @@
 export interface Report {
   id: string;
   clientId: string;
-  description: string;
-  isEmergency: boolean;
+  productId: string;
+  quantity: number;
+  isUrgent: boolean;
   createdAt: string;
-  status: 'open' | 'in-progress' | 'completed';
+  status: 'in-progress' | 'completed';
 }
 
 export interface Product {
   id: string;
   name: string;
-  status: 'Available' | 'Unavailable' | 'Discontinued';
-  quantityRequested: number;
-  lastUpdated: string;
-  reportId: string;
-}
-
-export interface Supplier {
-  id: string;
-  name: string;
-  rating: number;
+  currentStock: number;
+  minStock: number;
+  criticalStock: number;
   price: number;
-  deliveryTime: string;
-  productId: string;
 }
 
-export interface Alternative {
+export interface InventoryStatus {
+  status: 'ok' | 'low' | 'critical';
+  currentStock: number;
+  aggregatedDemand: number;
+}
+
+export interface Negotiation {
   id: string;
-  name: string;
-  originalProductId: string;
-  description: string;
-  compatibility: string;
-  suppliers: Supplier[];
+  productId: string;
+  status: 'active' | 'resolved' | 'cancelled';
+  minPrice: number;
+  maxPrice: number;
+  minVolume: number;
+  maxVolume: number;
+  preferredLeadTimeWeeks: number;
+  createdAt: string;
+  offers: Offer[];
+}
+
+export interface Offer {
+  id: string;
+  price: number;
+  volume: number;
+  leadTimeWeeks: number;
+  createdAt: string;
+  isCounterOffer: boolean;
 }
