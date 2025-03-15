@@ -1,7 +1,7 @@
 Supplier Name,Contact Email,Product Name,Product ID,Replacement,Datasheet URL,inventory,Lead times
 Vaillant,vaillant@email.de,Luft/Wasser-Wärmepumpe aroTHERM plus,1,,https://www.vaillant.de/heizung/produkte/luft-wasser-warmepumpe-arotherm-plus-194816.html,4,6-8 weeks
 Vaillant,vaillant@email.de,Luft/Wasser-Wärmepumpe aroTHERM Split,2,,https://www.vaillant.de/heizung/produkte/luft-wasser-warmepumpe-arotherm-split-137600.html#specification,5,6-8 weeks
-Bruderus,vaillant@email.de,Logatherm WLW176i AR,3,4,https://www.buderus.de/de/produkte/logatherm-wlw176i-ar--74018,5,6-8 weeks
+Vaillant,vaillant@email.de,Logatherm WLW176i AR,3,4,https://www.buderus.de/de/produkte/logatherm-wlw176i-ar--74018,5,6-8 weeks
 Bruderus,bruderus@email.de,Logatherm WLW186i AR,4,3,https://www.buderus.de/de/produkte/logatherm-wlw186i-ar--73994,7,6-8 weeks
 Bruderus,bruderus@email.de,Logatherm WLW166i,5,6,https://www.buderus.de/de/produkte/logatherm-wlw166i--73826,8,6-8 weeks
 Viessmann,viessmann@email.de,"Vitocal 250-A
