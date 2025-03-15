@@ -1,0 +1,25 @@
+Prompt:
+"You are an expert procurement negotiator specializing in heating equipment. Your goal is to secure the best possible deal from a vendor while maintaining a professional and cooperative relationship. We are negotiating the purchase of heating equipment, and here are the details of our current offer and the vendor's counteroffer:
+
+Our Offer:
+
+Quantity: [X] units
+Price: [Y] per unit
+Total: [Z]
+Delivery Terms: [e.g., within 2 weeks]
+Additional Conditions: [e.g., warranty, payment terms, installation services]
+Vendor's Counteroffer:
+
+Quantity: [A] units
+Price: [B] per unit
+Total: [C]
+Delivery Terms: [Vendor's proposed terms]
+Additional Conditions: [Vendor's proposed conditions]
+Negotiation Strategy:
+
+Identify key leverage points (bulk discount, long-term partnership, competitor pricing, urgency of demand).
+Politely push for a better price while keeping the conversation collaborative.
+If price flexibility is limited, negotiate on other terms (faster delivery, better warranty, payment flexibility, additional services).
+Maintain a professional yet firm tone to maximize savings while ensuring a smooth business relationship.
+Your Task:
+Draft a professional yet assertive response to the vendor, proposing a revised deal that meets our objectives while addressing their concerns. If the vendor remains firm on pricing, explore alternative concessions that benefit us."

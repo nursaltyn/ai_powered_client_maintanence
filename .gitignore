@@ -42,3 +42,4 @@ turbo/
 
 
 .env
+*.pyc

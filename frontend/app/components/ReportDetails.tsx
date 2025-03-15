@@ -25,11 +25,11 @@ export default function ReportDetails({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Available':
+      case 'available':
         return 'bg-[hsl(var(--status-available))]';
-      case 'Unavailable':
+      case 'unavailable':
         return 'bg-[hsl(var(--status-unavailable))]';
-      case 'Discontinued':
+      case 'discontinued':
         return 'bg-[hsl(var(--status-discontinued))]';
       default:
         return '';
@@ -54,7 +54,7 @@ export default function ReportDetails({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-700">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="suppliers">Supplier Matching</TabsTrigger>
           <TabsTrigger value="alternatives">Alternatives</TabsTrigger>
@@ -102,7 +102,7 @@ export default function ReportDetails({
             <CardContent>
               <div className="space-y-6">
                 {products
-                  .filter((p) => p.status === 'Unavailable')
+                  .filter((p) => p.status === 'unavailable')
                   .map((product) => (
                     <div key={product.id} className="space-y-4">
                       <h3 className="text-lg font-semibold">{product.name}</h3>
@@ -144,7 +144,7 @@ export default function ReportDetails({
             <CardContent>
               <div className="space-y-6">
                 {products
-                  .filter((p) => p.status === 'Discontinued')
+                  .filter((p) => p.status === 'discontinued')
                   .map((product) => {
                     const productAlternatives = alternatives.filter(
                       (a) => a.originalProductId === product.id
