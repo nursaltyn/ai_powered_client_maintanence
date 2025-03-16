@@ -1,5 +1,5 @@
 import requests
-from src.agents.LLMManager import LLMManager
+from agents.LLMManager import LLMManager
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 

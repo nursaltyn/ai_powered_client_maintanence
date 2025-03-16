@@ -1,9 +1,10 @@
-from src.agents.buyers.Buyer_Workflow_Manager import WorkflowManager as BuyerWorkflowManager
-from src.agents.buyers.BuyerQuery_Request import BuyerQueryRequest
+from agents.buyers.Buyer_Workflow_Manager import WorkflowManager as BuyerWorkflowManager
+from agents.buyers.BuyerQuery_Request import BuyerQueryRequest
 from dotenv import load_dotenv
 import os
 import json
 import asyncio
+import time
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -72,3 +73,35 @@ async def call_model(request: BuyerQueryRequest):
             yield json.dumps({"error": "Internal server error"}) + "\n"
 
     return StreamingResponse(result_generator(), media_type="application/json")
+
+
+def call_negotiator_model(request: BuyerQueryRequest):
+    def result_generator():
+        try:
+            yield json.dumps({"status": "streaming started"}) + "\n"  # Ensures immediate response
+            
+            for i, step_result in enumerate(graph.stream(request)):  # Assuming graph.stream() is iterable
+                print(f"Step {i} Output:", step_result)
+                time.sleep(0.1)  # Replacing asyncio.sleep with time.sleep
+                yield json.dumps(step_result) + "\n"
+        
+        except Exception as e:
+            print(f"Error in streaming: {str(e)}")
+            yield json.dumps({"error": "Internal server error"}) + "\n"
+
+    return StreamingResponse(result_generator(), media_type="application/json")
+
+def get_step_results(request: BuyerQueryRequest):
+    results = []
+    
+    try:
+        for i, step_result in enumerate(graph.stream(request)):  
+            print(f"Step {i} Output:", step_result)
+            time.sleep(0.1)  
+            results.append(step_result)
+    
+    except Exception as e:
+        print(f"Error in streaming: {str(e)}")
+        return [{"error": "Internal server error"}]
+
+    return results  # Returns a list of step results

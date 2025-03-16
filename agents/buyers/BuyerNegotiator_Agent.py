@@ -1,8 +1,8 @@
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import JsonOutputParser
-from src.agents.buyers.Buyer_Messenger import BuyerMessenger
-from src.agents.LLMManager import LLMManager
+from agents.buyers.Buyer_Messenger import BuyerMessenger
+from agents.LLMManager import LLMManager
 from datetime import datetime
 
 class BuyerNegotiatorAgent:
@@ -126,8 +126,8 @@ class BuyerNegotiatorAgent:
         # print(f"Negotiation status: {state['agreement_reached']}")
         # print(f"Offer from buyer: {state['current_negotiation_offer_buyer']}")
         # print(f"Offer from seller: {state['current_negotiation_offer_seller']}")
-        print(f"Buyer negotiation history: {state["negotiation_history_buyer"]}")
-        print(f"Seller negotiation history: {state["negotiation_history_seller"]}")
+        print(f"Buyer negotiation history: {state['negotiation_history_buyer']}")
+        print(f"Seller negotiation history: {state['negotiation_history_seller']}")
         print("===========================")
 
         state["negotiation_history_buyer"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): negotiation_offer_buyer})

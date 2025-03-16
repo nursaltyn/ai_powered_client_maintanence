@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph
-from src.agents.buyers.Buyer_State import BuyerNegotiatorState
-from src.agents.buyers.BuyerNegotiator_Agent import BuyerNegotiatorAgent
+from agents.buyers.Buyer_State import BuyerNegotiatorState
+from agents.buyers.BuyerNegotiator_Agent import BuyerNegotiatorAgent
 from langgraph.graph import END
 from typing import List
 
