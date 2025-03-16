@@ -36,7 +36,7 @@ class BuyerNegotiatorAgent:
         parsed_response = output_parser.parse(response)
 
         # add a log statement to see the forecast
-        print(f"Forecast for product {product_name}: {parsed_response}")
+        # print(f"Forecast for product {product_name}: {parsed_response}")
 
         return {"product_demand_forecast": parsed_response}
 
@@ -121,13 +121,13 @@ class BuyerNegotiatorAgent:
         state["current_negotiation_offer_buyer"] = negotiation_offer_buyer
         
         # add a log statement to know current negotiation status
-        print("Inside initiate_negotiation function")
-        print(f"Negotiation attempts: {state.get("negotiation_attempts", 0) + 1}")
-        print(f"Negotiation status: {state['agreement_reached']}")
-        print(f"Offer from buyer: {state['current_negotiation_offer_buyer']}")
-        print(f"Offer from seller: {state['current_negotiation_offer_seller']}")
-        # print(f"Buyer negotiation history: {state["negotiation_history_buyer"]}")
-        # print(f"Seller negotiation history: {state["negotiation_history_seller"]}")
+        # print("Inside initiate_negotiation function")
+        # print(f"Negotiation attempts: {state.get("negotiation_attempts", 0) + 1}")
+        # print(f"Negotiation status: {state['agreement_reached']}")
+        # print(f"Offer from buyer: {state['current_negotiation_offer_buyer']}")
+        # print(f"Offer from seller: {state['current_negotiation_offer_seller']}")
+        print(f"Buyer negotiation history: {state["negotiation_history_buyer"]}")
+        print(f"Seller negotiation history: {state["negotiation_history_seller"]}")
         print("===========================")
 
         state["negotiation_history_buyer"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): negotiation_offer_buyer})
@@ -146,7 +146,7 @@ class BuyerNegotiatorAgent:
 
     def generate_email_client(self, state: dict):
         
-        print("Inside generate_email_client function")
+        # print("Inside generate_email_client function")
 
         product_id = state["product_id"]
         negotiation_id = state["negotiation_id"] 
@@ -272,11 +272,19 @@ class BuyerNegotiatorAgent:
         # state["negotiation_attempts"] = state.get("negotiation_attempts", 0) + 1
         state["current_negotiation_offer_buyer"] = negotiation_offer_buyer
         
+        # check the difference between buyers and sellers quote:
+        buyer_price_per_unit = negotiation_offer_buyer["price_per_unit"]
+        seller_price_per_unit = seller_response["negotiation_offer_seller"]["price_per_unit"]
         
+        if abs(buyer_price_per_unit - seller_price_per_unit) < 0.2:
+            seller_response["agreement_reached"] = True
+        
+
         # add a log statement to know current negotiation status
         # print("Inside continue_negotiation function")
-        print(f"Negotiation attempts: {state.get("negotiation_attempts", 0) + 1}")
-        print(f"Negotiation status: {seller_response["agreement_reached"]}")
+        # print("Negotiation id: ", negotiation_id)
+        # print(f"Negotiation attempts: {state.get("negotiation_attempts", 0) + 1}")
+        # print(f"Negotiation status: {seller_response["agreement_reached"]}")
         print(f"Offer from buyer: {state['current_negotiation_offer_buyer']}")
         print(f"Offer from seller: {state['current_negotiation_offer_seller']}")
         print("===========================")

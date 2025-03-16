@@ -38,6 +38,9 @@ class BuyerMessenger:
                                negotiation_history_seller: dict = None) -> str:
         """Send a negotiation offer to the seller"""
 
+        negotiation_id = buyer_negotiation_offer["negotiation_id"]
+
+
         if initial_offer:
             prompt = ChatPromptTemplate.from_messages([
                 ("system", '''You are an expert negotiator representing the seller in a negotiation process. 
@@ -127,4 +130,5 @@ class BuyerMessenger:
                                             negotiation_history_buyer=negotiation_history_buyer,
                                             response_format={"type": "json_object"})
         parsed_response = output_parser.parse(response)
+        parsed_response["negotiation_id"] = negotiation_id
         return parsed_response
