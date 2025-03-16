@@ -23,6 +23,8 @@ export interface InventoryStatus {
   aggregatedDemand: number;
 }
 
+export type NegotiationStyle = 'aggressive' | 'balanced' | 'conciliatory';
+
 export interface Negotiation {
   id: string;
   productId: string;
@@ -35,6 +37,7 @@ export interface Negotiation {
   maxLeadTimeWeeks: number;
   createdAt: string;
   offers: Offer[];
+  style: NegotiationStyle;
 }
 
 export interface Offer {

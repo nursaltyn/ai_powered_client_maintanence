@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Product } from '@/app/types';
+import { Product, NegotiationStyle } from '@/app/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 interface NegotiationDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface NegotiationDialogProps {
     maxVolume: number;
     minLeadTimeWeeks: number;
     maxLeadTimeWeeks: number;
+    style: NegotiationStyle;
   }) => void;
   product: Product | undefined;
 }
@@ -34,6 +36,7 @@ export default function NegotiationDialog({
     maxVolume: 10,
     minLeadTimeWeeks: 1,
     maxLeadTimeWeeks: 4,
+    style: 'balanced' as NegotiationStyle,
   });
 
   useEffect(() => {
@@ -61,14 +64,40 @@ export default function NegotiationDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Start Negotiation for {product.name}</DialogTitle>
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-2xl font-bold tracking-tight">
+            New Negotiation
+          </DialogTitle>
+          <p className="text-muted-foreground font-medium">
+            {product.name}
+          </p>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Negotiation Style</Label>
+            <RadioGroup
+              defaultValue={formData.style}
+              onValueChange={(value) => setFormData({ ...formData, style: value as NegotiationStyle })}
+              className="grid grid-cols-3 gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="aggressive" id="aggressive" />
+                <Label htmlFor="aggressive" className="font-medium">Aggressive</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="balanced" id="balanced" />
+                <Label htmlFor="balanced" className="font-medium">Balanced</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="conciliatory" id="conciliatory" />
+                <Label htmlFor="conciliatory" className="font-medium">Conciliatory</Label>
+              </div>
+            </RadioGroup>
+          </div>
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="minPrice">Minimum Price ($)</Label>
+                <Label htmlFor="minPrice" className="text-sm font-semibold">Minimum Price ($)</Label>
                 <Input
                   id="minPrice"
                   type="number"
@@ -78,7 +107,7 @@ export default function NegotiationDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minVolume">Minimum Volume</Label>
+                <Label htmlFor="minVolume" className="text-sm font-semibold">Minimum Volume</Label>
                 <Input
                   id="minVolume"
                   type="number"
@@ -87,7 +116,7 @@ export default function NegotiationDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minLeadTime">Minimum Lead Time (weeks)</Label>
+                <Label htmlFor="minLeadTime" className="text-sm font-semibold">Minimum Lead Time (weeks)</Label>
                 <Input
                   id="minLeadTime"
                   type="number"
@@ -98,7 +127,7 @@ export default function NegotiationDialog({
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="maxPrice">Maximum Price ($)</Label>
+                <Label htmlFor="maxPrice" className="text-sm font-semibold">Maximum Price ($)</Label>
                 <Input
                   id="maxPrice"
                   type="number"
@@ -108,7 +137,7 @@ export default function NegotiationDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxVolume">Maximum Volume</Label>
+                <Label htmlFor="maxVolume" className="text-sm font-semibold">Maximum Volume</Label>
                 <Input
                   id="maxVolume"
                   type="number"
@@ -117,7 +146,7 @@ export default function NegotiationDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxLeadTime">Maximum Lead Time (weeks)</Label>
+                <Label htmlFor="maxLeadTime" className="text-sm font-semibold">Maximum Lead Time (weeks)</Label>
                 <Input
                   id="maxLeadTime"
                   type="number"

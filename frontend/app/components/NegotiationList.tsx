@@ -70,6 +70,17 @@ export default function NegotiationList({
     }));
   };
 
+  const getStyleBadgeVariant = (style: string) => {
+    switch (style) {
+      case 'aggressive':
+        return 'destructive';
+      case 'conciliatory':
+        return 'secondary';
+      default:
+        return 'default';
+    }
+  };
+
   const selectedProduct = products.find(p => p.id === counterOfferDialog.productId);
 
   return (
@@ -86,17 +97,22 @@ export default function NegotiationList({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>{product.name}</CardTitle>
-                <Badge
-                  variant={
-                    negotiation.status === 'active'
-                      ? 'default'
-                      : negotiation.status === 'resolved'
-                      ? 'success'
-                      : 'destructive'
-                  }
-                >
-                  {negotiation.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={getStyleBadgeVariant(negotiation.style)} className="capitalize">
+                    {negotiation.style}
+                  </Badge>
+                  <Badge
+                    variant={
+                      negotiation.status === 'active'
+                        ? 'default'
+                        : negotiation.status === 'resolved'
+                        ? 'success'
+                        : 'destructive'
+                    }
+                  >
+                    {negotiation.status}
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
