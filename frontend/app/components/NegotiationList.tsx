@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import NegotiationDialog from './NegotiationDialog';
+import { cn } from '@/lib/utils';
 
 interface NegotiationListProps {
   negotiations: Negotiation[];
@@ -54,6 +55,7 @@ export default function NegotiationList({
     maxVolume: number;
     minLeadTimeWeeks: number;
     maxLeadTimeWeeks: number;
+    style: string;
   }) => {
     onUpdateNegotiation(counterOfferDialog.negotiationId, {
       price: Number(((data.minPrice + data.maxPrice) / 2).toFixed(2)),
@@ -137,7 +139,12 @@ export default function NegotiationList({
                 </div>
 
                 <div className="space-y-2">
-                  <div className="border rounded-lg p-4 bg-muted/50">
+                  <div className={cn(
+                    "border rounded-lg p-4",
+                    latestOffer.isCounterOffer 
+                      ? "bg-blue-500/10 dark:bg-blue-500/20" 
+                      : "bg-purple-500/10 dark:bg-purple-500/20"
+                  )}>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium">Latest {latestOffer.isCounterOffer ? 'Counter Offer' : 'Offer'}</h4>
                       {negotiation.offers.length > 1 && (
@@ -174,7 +181,15 @@ export default function NegotiationList({
                   {isExpanded && negotiation.offers.length > 1 && (
                     <div className="space-y-2 pl-4 border-l-2 border-primary/20">
                       {negotiation.offers.slice(0, -1).reverse().map((offer, index) => (
-                        <div key={offer.id} className="border rounded-lg p-4 bg-muted/30">
+                        <div 
+                          key={offer.id} 
+                          className={cn(
+                            "border rounded-lg p-4",
+                            offer.isCounterOffer 
+                              ? "bg-blue-500/10 dark:bg-blue-500/20" 
+                              : "bg-purple-500/10 dark:bg-purple-500/20"
+                          )}
+                        >
                           <h4 className="font-medium mb-2">
                             {offer.isCounterOffer ? 'Counter Offer' : 'Initial Offer'} #{negotiation.offers.length - index - 1}
                           </h4>
