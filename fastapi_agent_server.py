@@ -44,64 +44,29 @@ app.add_middleware(
 
 @app.post("/call-model")
 async def call_model(request: BuyerQueryRequest):
-    async def result_generator():
-        try:
-            for i, step_result in enumerate(graph.stream(request)):
-                # print(f"Step {i} Output:", step_result)
-                if i>=2:
-                    # Extract the specific values you need
-                    first_key = next(iter(step_result))
-                    negotiation_data = step_result.get(first_key, {})
-                    filtered_result = {
-                        'negotiation_id': negotiation_data.get('negotiation_id'),
-                        'negotiation_attempts': negotiation_data.get('negotiation_attempts'),
-                        'current_negotiation_offer_buyer': negotiation_data.get('current_negotiation_offer_buyer'),
-                        'current_negotiation_offer_seller': negotiation_data.get('current_negotiation_offer_seller')
-                    }
-                else:
-                    filtered_result = step_result
-                
+    filtered_result = {}
+    filtered_result['negotiation_attempts']=[]
 
-                yield json.dumps(filtered_result) + "\n"  # Convert to JSON string
-        except Exception as e:
-            print(f"Error in streaming: {str(e)}")
-            yield json.dumps({"error": "Internal server error"}) + "\n"
+    try:
+        for i, step_result in enumerate(graph.stream(request)):
+            # print(f"Step {i} Output:", step_result)
+            if i>=2:
+                # Extract the specific values you need
+                first_key = next(iter(step_result))
+                negotiation_data = step_result.get(first_key, {})
+                result_dict = {'attempt': negotiation_data.get('negotiation_attempts'),
+                    'current_negotiation_offer_buyer': negotiation_data.get('current_negotiation_offer_buyer'),
+                    'current_negotiation_offer_seller': negotiation_data.get('current_negotiation_offer_seller')
+                }
+                filtered_result['negotiation_attempts'].append(result_dict)
+            else:
+                filtered_result.update(step_result)
 
-    return StreamingResponse(result_generator(), media_type="application/json")
+            # yield json.dumps(filtered_result) + "\n"  # Convert to JSON string
+    except Exception as e:
+        print(f"Error in streaming: {str(e)}")
 
-# @app.post("/call-model")
-# async def call_model(request: BuyerQueryRequest):
-#     async def result_generator():
-#         try:
-#             yield json.dumps({"status": "streaming started"}) + "\n"  # Ensures immediate response
-            
-#             for i, step_result in enumerate(graph.stream(request)):  # Ensure graph.stream() is async iterable
-#                 print(f"Step {i} Output:", step_result)
-#                 await asyncio.sleep(0.1)
-#                 yield json.dumps(step_result) + "\n"
-        
-#         except Exception as e:
-#             print(f"Error in streaming: {str(e)}")
-#             yield json.dumps({"error": "Internal server error"}) + "\n"
-
-#     return StreamingResponse(result_generator(), media_type="application/json")
-
-
-def call_negotiator_model(request: BuyerQueryRequest):
-    def result_generator():
-        try:
-            yield json.dumps({"status": "streaming started"}) + "\n"  # Ensures immediate response
-            
-            for i, step_result in enumerate(graph.stream(request)):  # Assuming graph.stream() is iterable
-                print(f"Step {i} Output:", step_result)
-                time.sleep(0.1)  # Replacing asyncio.sleep with time.sleep
-                yield json.dumps(step_result) + "\n"
-        
-        except Exception as e:
-            print(f"Error in streaming: {str(e)}")
-            yield json.dumps({"error": "Internal server error"}) + "\n"
-
-    return StreamingResponse(result_generator(), media_type="application/json")
+    return filtered_result
 
 def get_step_results(request: BuyerQueryRequest):
     results = []
