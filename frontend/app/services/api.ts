@@ -2,6 +2,48 @@ import { Report, Negotiation, Offer } from '@/app/types';
 
 const mockDelay = () => new Promise(resolve => setTimeout(resolve, 500));
 
+interface ModelRequest {
+  negotiation_style: string;
+  min_unit_price: number;
+  max_unit_price: number;
+  min_lead_time: number;
+  max_lead_time: number;
+  min_order_quantity: number;
+  max_order_quantity: number;
+  buyer_name: string;
+  buyer_id: string;
+  buyer_type: string;
+  price_sensitivity: string;
+  product_name: string;
+  product_id: string;
+  min_delivery_time: number;
+  max_delivery_time: number;
+  expected_discount: number;
+  requirement_of_certification: boolean;
+  sustainability_requirement: boolean;
+  product_urgency_rate: number;
+  max_negotiation_attempts: number;
+}
+
+interface ModelResponse {
+  negotiation_attempts: {
+    attempt: number;
+    current_negotiation_offer_buyer: {
+      price_per_unit: number;
+      lead_time: number;
+      order_quantity: number;
+      payment_terms: string;
+      negotiation_id: string;
+    };
+    current_negotiation_offer_seller: {
+      price_per_unit: number;
+      lead_time: number;
+      order_quantity: number;
+      payment_terms: string;
+    };
+  }[];
+}
+
 export const api = {
   reports: {
     async getAll(): Promise<Report[]> {
@@ -65,6 +107,38 @@ export const api = {
   },
 
   negotiations: {
+    async callModel(data: ModelRequest): Promise<ModelResponse> {
+      const response = await fetch('http://localhost:8000/call-model', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          // Add the default values for the new parameters
+          buyer_name: "Jason",
+          buyer_id: "B123",
+          buyer_type: "Medium-Sized Business",
+          price_sensitivity: "Medium",
+          product_name: "Widget",
+          product_id: "P456",
+          min_delivery_time: 2.0,
+          max_delivery_time: 5.0,
+          expected_discount: 5.0,
+          requirement_of_certification: true,
+          sustainability_requirement: false,
+          product_urgency_rate: 0.77,
+          max_negotiation_attempts: 3
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to call negotiation model');
+      }
+
+      return response.json();
+    },
+
     async getAll(): Promise<Negotiation[]> {
       await mockDelay();
       const storedNegotiations = localStorage.getItem('negotiations');
@@ -81,7 +155,9 @@ export const api = {
           maxPrice: 14000.00,
           minVolume: 2,
           maxVolume: 5,
-          preferredLeadTimeWeeks: 4,
+          minLeadTimeWeeks: 2,
+          maxLeadTimeWeeks: 6,
+          style: 'aggressive',
           createdAt: '2024-03-15T12:00:00Z',
           offers: [
             {
@@ -118,7 +194,9 @@ export const api = {
           maxPrice: 16500.00,
           minVolume: 1,
           maxVolume: 3,
-          preferredLeadTimeWeeks: 6,
+          minLeadTimeWeeks: 4,
+          maxLeadTimeWeeks: 8,
+          style: 'balanced',
           createdAt: '2024-03-18T09:00:00Z',
           offers: [
             {
@@ -155,7 +233,9 @@ export const api = {
           maxPrice: 13000.00,
           minVolume: 2,
           maxVolume: 4,
-          preferredLeadTimeWeeks: 3,
+          minLeadTimeWeeks: 2,
+          maxLeadTimeWeeks: 4,
+          style: 'conciliatory',
           createdAt: '2024-03-10T15:00:00Z',
           offers: [
             {
@@ -192,7 +272,9 @@ export const api = {
           maxPrice: 13500.00,
           minVolume: 2,
           maxVolume: 5,
-          preferredLeadTimeWeeks: 4,
+          minLeadTimeWeeks: 3,
+          maxLeadTimeWeeks: 6,
+          style: 'balanced',
           createdAt: '2024-03-13T10:00:00Z',
           offers: [
             {
@@ -229,7 +311,9 @@ export const api = {
           maxPrice: 12500.00,
           minVolume: 2,
           maxVolume: 4,
-          preferredLeadTimeWeeks: 3,
+          minLeadTimeWeeks: 2,
+          maxLeadTimeWeeks: 5,
+          style: 'aggressive',
           createdAt: '2024-03-16T11:00:00Z',
           offers: [
             {
@@ -265,19 +349,29 @@ export const api = {
     },
 
     async create(data: Omit<Negotiation, 'id' | 'createdAt' | 'offers'>): Promise<Negotiation> {
-      await mockDelay();
+      const modelResponse = await this.callModel({
+        negotiation_style: data.style,
+        min_unit_price: data.minPrice,
+        max_unit_price: data.maxPrice,
+        min_lead_time: data.minLeadTimeWeeks,
+        max_lead_time: data.maxLeadTimeWeeks,
+        min_order_quantity: data.minVolume,
+        max_order_quantity: data.maxVolume,
+      });
+
+      const lastAttempt = modelResponse.negotiation_attempts[modelResponse.negotiation_attempts.length - 1];
       const newNegotiation: Negotiation = {
         id: `neg-${Date.now()}`,
         ...data,
         createdAt: new Date().toISOString(),
-        offers: [{
-          id: `offer-${Date.now()}`,
-          price: Number(((data.minPrice + data.maxPrice) / 2).toFixed(2)),
-          volume: Math.floor((data.minVolume + data.maxVolume) / 2),
-          leadTimeWeeks: data.preferredLeadTimeWeeks,
+        offers: modelResponse.negotiation_attempts.map((attempt, index) => ({
+          id: `offer-${Date.now()}-${index}`,
+          price: attempt.current_negotiation_offer_seller.price_per_unit,
+          volume: attempt.current_negotiation_offer_seller.order_quantity,
+          leadTimeWeeks: attempt.current_negotiation_offer_seller.lead_time,
           createdAt: new Date().toISOString(),
-          isCounterOffer: false,
-        }],
+          isCounterOffer: index % 2 === 1,
+        })),
       };
 
       const existingNegotiations = await this.getAll();
@@ -298,22 +392,43 @@ export const api = {
     },
 
     async addOffer(negotiationId: string, offerData: Omit<Offer, 'id' | 'createdAt'>): Promise<Negotiation> {
-      await mockDelay();
       const negotiations = await this.getAll();
+      const negotiation = negotiations.find(n => n.id === negotiationId);
+      
+      if (!negotiation) {
+        throw new Error('Negotiation not found');
+      }
+
+      const modelResponse = await this.callModel({
+        negotiation_style: negotiation.style,
+        min_unit_price: negotiation.minPrice,
+        max_unit_price: negotiation.maxPrice,
+        min_lead_time: negotiation.minLeadTimeWeeks,
+        max_lead_time: negotiation.maxLeadTimeWeeks,
+        min_order_quantity: negotiation.minVolume,
+        max_order_quantity: negotiation.maxVolume,
+      });
+
+      const lastAttempt = modelResponse.negotiation_attempts[modelResponse.negotiation_attempts.length - 1];
+      const newOffers = modelResponse.negotiation_attempts.map((attempt, index) => ({
+        id: `offer-${Date.now()}-${index}`,
+        price: attempt.current_negotiation_offer_seller.price_per_unit,
+        volume: attempt.current_negotiation_offer_seller.order_quantity,
+        leadTimeWeeks: attempt.current_negotiation_offer_seller.lead_time,
+        createdAt: new Date().toISOString(),
+        isCounterOffer: index % 2 === 1,
+      }));
+
       const updatedNegotiations = negotiations.map(neg => {
         if (neg.id === negotiationId) {
-          const newOffer = {
-            id: `offer-${Date.now()}`,
-            ...offerData,
-            createdAt: new Date().toISOString(),
-          };
           return {
             ...neg,
-            offers: [...neg.offers, newOffer],
+            offers: [...neg.offers, ...newOffers],
           };
         }
         return neg;
       });
+
       localStorage.setItem('negotiations', JSON.stringify(updatedNegotiations));
       return updatedNegotiations.find(n => n.id === negotiationId)!;
     },
