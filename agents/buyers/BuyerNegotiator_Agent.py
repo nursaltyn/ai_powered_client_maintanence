@@ -127,9 +127,9 @@ class BuyerNegotiatorAgent:
         # print(f"Negotiation status: {state['agreement_reached']}")
         # print(f"Offer from buyer: {state['current_negotiation_offer_buyer']}")
         # print(f"Offer from seller: {state['current_negotiation_offer_seller']}")
-        print(f"Buyer negotiation history: {state['negotiation_history_buyer']}")
-        print(f"Seller negotiation history: {state['negotiation_history_seller']}")
-        print("===========================")
+        # print(f"Buyer negotiation history: {state['negotiation_history_buyer']}")
+        # print(f"Seller negotiation history: {state['negotiation_history_seller']}")
+        # print("===========================")
 
         state["negotiation_history_buyer"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): negotiation_offer_buyer})
         state["negotiation_history_seller"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): seller_response["negotiation_offer_seller"]})
@@ -171,9 +171,9 @@ class BuyerNegotiatorAgent:
         Maintenance Team
         '''
 
-        print(f"Email sent to buyer: {email}")
+        # print(f"Email sent to buyer: {email}")
 
-        return {"message_to_the_client": email}
+        return {"message_to_the_buyer": email}
 
     def continue_negotiation(self, state: dict) -> dict:
 

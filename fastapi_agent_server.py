@@ -41,26 +41,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# @app.post("/call-model")
-# async def call_model(request: BuyerQueryRequest):
-#     async def result_generator():
-#         try:
-#             for i, step_result in enumerate(graph.stream(request)):
-#                 print(f"Step {i} Output:", step_result)
-#                 yield step_result  # Ensure step_result is a valid string/JSON
-#         except Exception as e:
-#             print(f"Error occurred: {e}")  # Log the error instead of raising HTTPException
-#             yield json.dumps({"error": "An error occurred while processing the request."})
-
-#     return StreamingResponse(result_generator(), media_type="application/json")
 
 @app.post("/call-model")
 async def call_model(request: BuyerQueryRequest):
     async def result_generator():
         try:
             for i, step_result in enumerate(graph.stream(request)):
-                print(f"Step {i} Output:", step_result)
-                yield json.dumps(step_result) + "\n"  # Convert to JSON string
+                # print(f"Step {i} Output:", step_result)
+                if i>=2:
+                    # Extract the specific values you need
+                    first_key = next(iter(step_result))
+                    negotiation_data = step_result.get(first_key, {})
+                    filtered_result = {
+                        'negotiation_id': negotiation_data.get('negotiation_id'),
+                        'negotiation_attempts': negotiation_data.get('negotiation_attempts'),
+                        'current_negotiation_offer_buyer': negotiation_data.get('current_negotiation_offer_buyer'),
+                        'current_negotiation_offer_seller': negotiation_data.get('current_negotiation_offer_seller')
+                    }
+                else:
+                    filtered_result = step_result
+                
+
+                yield json.dumps(filtered_result) + "\n"  # Convert to JSON string
         except Exception as e:
             print(f"Error in streaming: {str(e)}")
             yield json.dumps({"error": "Internal server error"}) + "\n"
