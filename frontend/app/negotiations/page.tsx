@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import NegotiationList from '../components/NegotiationList';
 import EmailPreview from '../components/EmailPreview';
-import { Product, Negotiation, Offer, Report } from '../types';
+import { Product, Negotiation, Report } from '../types';
 import { toast } from 'sonner';
+import { api } from '../services/api';
 
 const mockProducts: Product[] = [
   {
@@ -73,53 +74,9 @@ const mockProducts: Product[] = [
   }
 ];
 
-const defaultNegotiations: Negotiation[] = [
-  {
-    id: 'neg-1',
-    productId: '3',
-    status: 'active',
-    minPrice: 12000.00,
-    maxPrice: 14000.00,
-    minVolume: 2,
-    maxVolume: 5,
-    preferredLeadTimeWeeks: 4,
-    createdAt: '2024-03-20T12:00:00Z',
-    offers: [
-      {
-        id: 'offer-1',
-        price: 13000.00,
-        volume: 3,
-        leadTimeWeeks: 4,
-        createdAt: '2024-03-20T12:30:00Z',
-        isCounterOffer: false,
-      },
-    ],
-  },
-  {
-    id: 'neg-2',
-    productId: '8',
-    status: 'active',
-    minPrice: 14500.00,
-    maxPrice: 16500.00,
-    minVolume: 1,
-    maxVolume: 3,
-    preferredLeadTimeWeeks: 6,
-    createdAt: '2024-03-21T09:00:00Z',
-    offers: [
-      {
-        id: 'offer-2',
-        price: 15500.00,
-        volume: 2,
-        leadTimeWeeks: 5,
-        createdAt: '2024-03-21T09:30:00Z',
-        isCounterOffer: false,
-      },
-    ],
-  },
-];
-
 export default function NegotiationsPage() {
   const [negotiations, setNegotiations] = useState<Negotiation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [emailDialog, setEmailDialog] = useState<{
     open: boolean;
     report: Report | null;
@@ -129,65 +86,78 @@ export default function NegotiationsPage() {
   });
 
   useEffect(() => {
-    // Load negotiations from localStorage or use defaults
-    const storedNegotiations = JSON.parse(localStorage.getItem('negotiations') || 'null');
-    setNegotiations(storedNegotiations || defaultNegotiations);
+    loadNegotiations();
   }, []);
 
-  const handleResolveNegotiation = (negotiationId: string) => {
-    const negotiation = negotiations.find(n => n.id === negotiationId);
-    if (!negotiation) return;
-
-    const mockReport: Report = {
-      id: `report-${Date.now()}`,
-      clientId: `CLT-${Date.now()}`,
-      productId: negotiation.productId,
-      quantity: negotiation.offers[negotiation.offers.length - 1].volume,
-      isUrgent: false,
-      createdAt: new Date().toISOString(),
-      status: 'completed',
-    };
-
-    setEmailDialog({
-      open: true,
-      report: mockReport,
-    });
-
-    const updatedNegotiations = negotiations.map((neg) =>
-      neg.id === negotiationId ? { ...neg, status: 'resolved' } : neg
-    );
-    setNegotiations(updatedNegotiations);
-    localStorage.setItem('negotiations', JSON.stringify(updatedNegotiations));
+  const loadNegotiations = async () => {
+    try {
+      const data = await api.negotiations.getAll();
+      setNegotiations(data);
+    } catch (error) {
+      toast.error('Failed to load negotiations');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdateNegotiation = (
+  const handleResolveNegotiation = async (negotiationId: string) => {
+    try {
+      const negotiation = negotiations.find(n => n.id === negotiationId);
+      if (!negotiation) return;
+
+      const mockReport: Report = {
+        id: `report-${Date.now()}`,
+        clientId: `CLT-${Date.now()}`,
+        productId: negotiation.productId,
+        quantity: negotiation.offers[negotiation.offers.length - 1].volume,
+        isUrgent: false,
+        createdAt: new Date().toISOString(),
+        status: 'completed',
+      };
+
+      setEmailDialog({
+        open: true,
+        report: mockReport,
+      });
+
+      await api.negotiations.update(negotiationId, { status: 'resolved' });
+      await loadNegotiations();
+    } catch (error) {
+      toast.error('Failed to resolve negotiation');
+    }
+  };
+
+  const handleUpdateNegotiation = async (
     negotiationId: string,
     offerData: Omit<Offer, 'id' | 'createdAt' | 'isCounterOffer'>
   ) => {
-    const updatedNegotiations = negotiations.map((neg) => {
-      if (neg.id === negotiationId) {
-        const newOffer = {
-          id: `offer-${Date.now()}`,
-          ...offerData,
-          createdAt: new Date().toISOString(),
-          isCounterOffer: true,
-        };
-        return {
-          ...neg,
-          offers: [...neg.offers, newOffer],
-        };
-      }
-      return neg;
-    });
-    setNegotiations(updatedNegotiations);
-    localStorage.setItem('negotiations', JSON.stringify(updatedNegotiations));
-    toast.success('Counter offer submitted successfully');
+    try {
+      await api.negotiations.addOffer(negotiationId, {
+        ...offerData,
+        isCounterOffer: true,
+      });
+      await loadNegotiations();
+      toast.success('Counter offer submitted successfully');
+    } catch (error) {
+      toast.error('Failed to submit counter offer');
+    }
   };
 
-  const handleSendEmail = () => {
-    toast.success('Email sent successfully');
-    setEmailDialog({ open: false, report: null });
+  const handleSendEmail = async () => {
+    if (!emailDialog.report) return;
+    
+    try {
+      await api.email.send(emailDialog.report.id, 'Email content');
+      toast.success('Email sent successfully');
+      setEmailDialog({ open: false, report: null });
+    } catch (error) {
+      toast.error('Failed to send email');
+    }
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-[calc(100vh-8rem)]">Loading...</div>;
+  }
 
   return (
     <>

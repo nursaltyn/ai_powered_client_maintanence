@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReportList from './components/ReportList';
 import NegotiationDialog from './components/NegotiationDialog';
 import EmailPreview from './components/EmailPreview';
 import { Report, Product, Negotiation } from './types';
 import { toast } from 'sonner';
+import { api } from './services/api';
 
 const mockProducts: Product[] = [
   {
@@ -74,56 +75,9 @@ const mockProducts: Product[] = [
   }
 ];
 
-const mockReports: Report[] = [
-  {
-    id: '1',
-    clientId: 'CLT001',
-    productId: '1',
-    quantity: 2,
-    isUrgent: true,
-    createdAt: '2024-03-20T10:00:00Z',
-    status: 'in-progress',
-  },
-  {
-    id: '2',
-    clientId: 'CLT002',
-    productId: '3',
-    quantity: 1,
-    isUrgent: false,
-    createdAt: '2024-03-19T15:30:00Z',
-    status: 'completed',
-  },
-  {
-    id: '3',
-    clientId: 'CLT003',
-    productId: '5',
-    quantity: 2,
-    isUrgent: false,
-    createdAt: '2024-03-21T09:15:00Z',
-    status: 'in-progress',
-  },
-  {
-    id: '4',
-    clientId: 'CLT004',
-    productId: '8',
-    quantity: 1,
-    isUrgent: true,
-    createdAt: '2024-03-21T11:45:00Z',
-    status: 'in-progress',
-  },
-  {
-    id: '5',
-    clientId: 'CLT005',
-    productId: '2',
-    quantity: 1,
-    isUrgent: false,
-    createdAt: '2024-03-20T14:20:00Z',
-    status: 'completed',
-  }
-];
-
 export default function Home() {
-  const [reports, setReports] = useState(mockReports);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
   const [negotiationDialog, setNegotiationDialog] = useState<{
     open: boolean;
     productId: string;
@@ -139,6 +93,21 @@ export default function Home() {
     report: null,
   });
 
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const loadReports = async () => {
+    try {
+      const data = await api.reports.getAll();
+      setReports(data);
+    } catch (error) {
+      toast.error('Failed to load reports');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateNegotiation = (productId: string) => {
     setNegotiationDialog({
       open: true,
@@ -146,41 +115,25 @@ export default function Home() {
     });
   };
 
-  const handleNegotiationSubmit = (data: {
+  const handleNegotiationSubmit = async (data: {
     minPrice: number;
     maxPrice: number;
     minVolume: number;
     maxVolume: number;
     preferredLeadTimeWeeks: number;
   }) => {
-    const product = mockProducts.find(p => p.id === negotiationDialog.productId);
-    if (!product) return;
-
-    const newNegotiation: Negotiation = {
-      id: `neg-${Date.now()}`,
-      productId: negotiationDialog.productId,
-      status: 'active',
-      minPrice: data.minPrice,
-      maxPrice: data.maxPrice,
-      minVolume: data.minVolume,
-      maxVolume: data.maxVolume,
-      preferredLeadTimeWeeks: data.preferredLeadTimeWeeks,
-      createdAt: new Date().toISOString(),
-      offers: [{
-        id: `offer-${Date.now()}`,
-        price: Number(((data.minPrice + data.maxPrice) / 2).toFixed(2)),
-        volume: Math.floor((data.minVolume + data.maxVolume) / 2),
-        leadTimeWeeks: data.preferredLeadTimeWeeks,
-        createdAt: new Date().toISOString(),
-        isCounterOffer: false,
-      }],
-    };
-
-    const existingNegotiations = JSON.parse(localStorage.getItem('negotiations') || '[]');
-    localStorage.setItem('negotiations', JSON.stringify([...existingNegotiations, newNegotiation]));
-
-    toast.success('Negotiation started successfully');
-    setNegotiationDialog({ open: false, productId: '' });
+    try {
+      await api.negotiations.create({
+        productId: negotiationDialog.productId,
+        status: 'active',
+        ...data,
+      });
+      toast.success('Negotiation started successfully');
+    } catch (error) {
+      toast.error('Failed to create negotiation');
+    } finally {
+      setNegotiationDialog({ open: false, productId: '' });
+    }
   };
 
   const handleSendEmail = (report: Report) => {
@@ -190,12 +143,23 @@ export default function Home() {
     });
   };
 
-  const handleEmailSent = () => {
-    toast.success('Email sent successfully');
-    setEmailDialog({ open: false, report: null });
+  const handleEmailSent = async () => {
+    if (!emailDialog.report) return;
+    
+    try {
+      await api.email.send(emailDialog.report.id, 'Email content');
+      toast.success('Email sent successfully');
+      setEmailDialog({ open: false, report: null });
+    } catch (error) {
+      toast.error('Failed to send email');
+    }
   };
 
   const selectedProduct = mockProducts.find(p => p.id === negotiationDialog.productId);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-[calc(100vh-8rem)]">Loading...</div>;
+  }
 
   return (
     <>

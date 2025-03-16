@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, FileText } from 'lucide-react';
+import { LayoutDashboard, FileText, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: 'Reports', href: '/', icon: FileText },
   { name: 'Negotiations', href: '/negotiations', icon: LayoutDashboard },
+  { name: 'Profit Analysis', href: '/profit', icon: TrendingUp },
 ];
 
 export default function Sidebar() {

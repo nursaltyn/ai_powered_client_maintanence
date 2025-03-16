@@ -5,7 +5,7 @@ import { Negotiation, Product, Offer } from '@/app/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import NegotiationDialog from './NegotiationDialog';
 
 interface NegotiationListProps {
@@ -32,6 +32,8 @@ export default function NegotiationList({
     productId: '',
     currentOffer: null,
   });
+
+  const [expandedOffers, setExpandedOffers] = useState<Record<string, boolean>>({});
 
   const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
 
@@ -60,6 +62,13 @@ export default function NegotiationList({
     setCounterOfferDialog({ open: false, negotiationId: '', productId: '', currentOffer: null });
   };
 
+  const toggleOffers = (negotiationId: string) => {
+    setExpandedOffers(prev => ({
+      ...prev,
+      [negotiationId]: !prev[negotiationId]
+    }));
+  };
+
   const selectedProduct = products.find(p => p.id === counterOfferDialog.productId);
 
   return (
@@ -67,6 +76,7 @@ export default function NegotiationList({
       {negotiations.map((negotiation) => {
         const product = products.find(p => p.id === negotiation.productId);
         const latestOffer = negotiation.offers[negotiation.offers.length - 1];
+        const isExpanded = expandedOffers[negotiation.id];
         
         if (!product) return null;
         
@@ -109,9 +119,25 @@ export default function NegotiationList({
                   </div>
                 </div>
 
-                {latestOffer && (
+                <div className="space-y-2">
                   <div className="border rounded-lg p-4 bg-muted/50">
-                    <h4 className="font-medium mb-2">Latest {latestOffer.isCounterOffer ? 'Counter Offer' : 'Offer'}</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">Latest {latestOffer.isCounterOffer ? 'Counter Offer' : 'Offer'}</h4>
+                      {negotiation.offers.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleOffers(negotiation.id)}
+                          className="gap-1"
+                        >
+                          {isExpanded ? (
+                            <>Hide History <ChevronUp className="h-4 w-4" /></>
+                          ) : (
+                            <>Show History <ChevronDown className="h-4 w-4" /></>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Price</p>
@@ -127,7 +153,36 @@ export default function NegotiationList({
                       </div>
                     </div>
                   </div>
-                )}
+
+                  {isExpanded && negotiation.offers.length > 1 && (
+                    <div className="space-y-2 pl-4 border-l-2 border-primary/20">
+                      {negotiation.offers.slice(0, -1).reverse().map((offer, index) => (
+                        <div key={offer.id} className="border rounded-lg p-4 bg-muted/30">
+                          <h4 className="font-medium mb-2">
+                            {offer.isCounterOffer ? 'Counter Offer' : 'Initial Offer'} #{negotiation.offers.length - index - 1}
+                          </h4>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="text-muted-foreground">Price</p>
+                              <p>{formatCurrency(offer.price)}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Volume</p>
+                              <p>{offer.volume} units</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Lead Time</p>
+                              <p>{offer.leadTimeWeeks} weeks</p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {new Date(offer.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {negotiation.status === 'active' && (
                   <div className="flex justify-end gap-2">
