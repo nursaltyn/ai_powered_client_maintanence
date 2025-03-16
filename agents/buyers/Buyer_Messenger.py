@@ -2,6 +2,7 @@ import requests
 from agents.LLMManager import LLMManager
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
+import json
 
 class BuyerMessenger:
     def __init__(self, seller_endpoint_url, llm_api_key, llm_model_name, llm_model):
@@ -12,6 +13,7 @@ class BuyerMessenger:
 
     def get_negotiation_offer(self, negotiation_uuid: str) -> str:
         """Get a negotiation offer from the seller"""
+        print("get_negotiation_offer")
         try:
             response = requests.get(
                 f"{self.endpoint_url}/get_negotiation_offer/{negotiation_uuid}"
@@ -27,7 +29,7 @@ class BuyerMessenger:
                                negotiation_history_buyer: dict = None,
                                negotiation_history_seller: dict = None) -> str:
         """Send a negotiation offer to the seller"""
-
+        print("send_negotiation_offer")
         negotiation_id = buyer_negotiation_offer["negotiation_id"]
 
 
@@ -40,6 +42,13 @@ class BuyerMessenger:
             Consider the following:
             1. If the buyer's offer is acceptable, respond with `agreement_reached: True` and return the buyer's offer as the final negotiation agreement.
             2. If the buyer's offer is not acceptable, respond with `agreement_reached: False` and provide a counteroffer that aligns with seller constraints.
+            3. If the product_urgency_rate is high, you can offer to buy for a higher price. The higher the urgency, the more you should raise the offered price.
+            Use the following scale:
+            - 0-30%: low urgency
+            - 30-50%: medium urgency
+            - 50-80%: high urgency
+            - 80-100%: very high urgency
+            4. The higher the volume you request, the more you can push for a lower price/discount. 
 
             Your response must always be in the following JSON format:
             {{
@@ -112,13 +121,20 @@ class BuyerMessenger:
             ])
 
         output_parser = JsonOutputParser()
-        
+        print("prompt = ChatPromptTemplate.from_messages")
         response = self.llm_manager.invoke(prompt, 
                                             previous_seller_offer=previous_seller_offer, 
                                             buyer_negotiation_offer=buyer_negotiation_offer, 
                                             negotiation_history_seller=negotiation_history_seller,
                                             negotiation_history_buyer=negotiation_history_buyer,
-                                            response_format={"type": "json_object"})
-        parsed_response = output_parser.parse(response)
+                                            )
+        parsed_response = response.strip("```json").strip("```").strip()  
+        print("json.loads")
+        parsed_response = parsed_response.replace("False", "false").replace("True", "true")
+        print("parsed_response", parsed_response)
+        
+        parsed_response = json.loads(parsed_response)
+        print('parsed_response', parsed_response)
+        # parsed_response = output_parser.parse(response)
         parsed_response["negotiation_id"] = negotiation_id
         return parsed_response

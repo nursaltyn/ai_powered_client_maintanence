@@ -4,6 +4,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from agents.buyers.Buyer_Messenger import BuyerMessenger
 from agents.LLMManager import LLMManager
 from datetime import datetime
+import json
 
 class BuyerNegotiatorAgent:
     def __init__(self, API_KEY, SELLER_ENDPOINT_URL, LLM_MODEL_NAME, LLM_MODEL):
@@ -15,7 +16,7 @@ class BuyerNegotiatorAgent:
 
     def get_product_demand_forecast(self, state: dict) -> dict:
         """Forecast product demand based on historical sales data."""
-
+        print("get_product_demand_forecast")
         product_name = state['product_name']
         prompt = ChatPromptTemplate.from_messages([
             ("system", '''You are a data analyst that specializes in forecasting product demand. 
@@ -33,8 +34,12 @@ class BuyerNegotiatorAgent:
 
         output_parser = JsonOutputParser()
         
-        response = self.llm_manager.invoke(prompt, product_name=product_name, response_format={"type": "json_object"})
-        parsed_response = output_parser.parse(response)
+        response = self.llm_manager.invoke(prompt, product_name=product_name)
+        parsed_response = response.strip("```json").strip("```").strip()   
+        print("json.loads")
+        parsed_response = json.loads(parsed_response)
+        print("parsed_response", parsed_response)
+        # parsed_response = output_parser.parse(response)
 
         # add a log statement to see the forecast
         # print(f"Forecast for product {product_name}: {parsed_response}")
@@ -44,6 +49,7 @@ class BuyerNegotiatorAgent:
 
     def identify_buyer_profile(self, state: dict) -> dict:
         """Forecast product demand based on historical sales data."""
+        print("identify_buyer_profile")
         buyer_type = state["buyer_type"]
         negotiation_style = state["negotiation_style"]
         price_sensitivity = state["price_sensitivity"]
@@ -55,7 +61,7 @@ class BuyerNegotiatorAgent:
 
     def initiate_negotiation(self, state: dict) -> dict:
         """Initiate a negotiation with the seller based on the buyer's profile, price thresholds, etc."""     
-
+        print("initiate_negotiation")
         # Extract buyer and negotiation parameters
         parameters = {
             "buyer_preferences": {key: state[key] for key in ["negotiation_style", "buyer_type", "price_sensitivity"]},
@@ -106,8 +112,15 @@ class BuyerNegotiatorAgent:
 
 
         output_parser = JsonOutputParser()
-        response = self.llm_manager.invoke(prompt, parameters=parameters, response_format={"type": "json_object"})
-        negotiation_offer_buyer = output_parser.parse(response)
+        response = self.llm_manager.invoke(prompt, parameters=parameters)
+        response = response.strip("```json").strip("```").strip()   
+        print("json.loads")
+        negotiation_offer_buyer = json.loads(response)
+        print("negotiation_offer_buyer", negotiation_offer_buyer)
+        # print("output_parser", output_parser)
+
+        # negotiation_offer_buyer = output_parser.parse(response)
+        
         negotiation_offer_buyer["negotiation_id"] = negotiation_id
 
         # send negotiation request to seller
@@ -256,9 +269,12 @@ class BuyerNegotiatorAgent:
                                            counter_seller_offer=state['current_negotiation_offer_seller'], 
                                            negotiation_history_buyer=state['negotiation_history_buyer'],
                                            negotiation_history_seller=state['negotiation_history_seller'],                                           
-                                           response_format={"type": "json_object"})
-        
-        negotiation_offer_buyer = output_parser.parse(response)
+                                           )
+        response = response.strip("```json").strip("```").strip()
+        print("json.loads")
+        negotiation_offer_buyer = json.loads(response)
+ 
+        # negotiation_offer_buyer = output_parser.parse(response)
         negotiation_offer_buyer["negotiation_id"] = negotiation_id
 
         # send negotiation request to seller
