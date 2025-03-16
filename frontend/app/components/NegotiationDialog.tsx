@@ -15,7 +15,8 @@ interface NegotiationDialogProps {
     maxPrice: number;
     minVolume: number;
     maxVolume: number;
-    preferredLeadTimeWeeks: number;
+    minLeadTimeWeeks: number;
+    maxLeadTimeWeeks: number;
   }) => void;
   product: Product | undefined;
 }
@@ -31,7 +32,8 @@ export default function NegotiationDialog({
     maxPrice: 0,
     minVolume: 5,
     maxVolume: 10,
-    preferredLeadTimeWeeks: 2,
+    minLeadTimeWeeks: 1,
+    maxLeadTimeWeeks: 4,
   });
 
   useEffect(() => {
@@ -58,57 +60,72 @@ export default function NegotiationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Start Negotiation for {product.name}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="minPrice">Minimum Price ($)</Label>
-            <Input
-              id="minPrice"
-              type="number"
-              step="0.01"
-              value={formData.minPrice}
-              onChange={(e) => setFormData({ ...formData, minPrice: Number(e.target.value) })}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="maxPrice">Maximum Price ($)</Label>
-            <Input
-              id="maxPrice"
-              type="number"
-              step="0.01"
-              value={formData.maxPrice}
-              onChange={(e) => setFormData({ ...formData, maxPrice: Number(e.target.value) })}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="minVolume">Minimum Volume</Label>
-            <Input
-              id="minVolume"
-              type="number"
-              value={formData.minVolume}
-              onChange={(e) => setFormData({ ...formData, minVolume: parseInt(e.target.value) })}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="maxVolume">Maximum Volume</Label>
-            <Input
-              id="maxVolume"
-              type="number"
-              value={formData.maxVolume}
-              onChange={(e) => setFormData({ ...formData, maxVolume: parseInt(e.target.value) })}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="leadTime">Preferred Lead Time (weeks)</Label>
-            <Input
-              id="leadTime"
-              type="number"
-              value={formData.preferredLeadTimeWeeks}
-              onChange={(e) => setFormData({ ...formData, preferredLeadTimeWeeks: parseInt(e.target.value) })}
-            />
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="minPrice">Minimum Price ($)</Label>
+                <Input
+                  id="minPrice"
+                  type="number"
+                  step="0.01"
+                  value={formData.minPrice}
+                  onChange={(e) => setFormData({ ...formData, minPrice: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minVolume">Minimum Volume</Label>
+                <Input
+                  id="minVolume"
+                  type="number"
+                  value={formData.minVolume}
+                  onChange={(e) => setFormData({ ...formData, minVolume: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minLeadTime">Minimum Lead Time (weeks)</Label>
+                <Input
+                  id="minLeadTime"
+                  type="number"
+                  value={formData.minLeadTimeWeeks}
+                  onChange={(e) => setFormData({ ...formData, minLeadTimeWeeks: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="maxPrice">Maximum Price ($)</Label>
+                <Input
+                  id="maxPrice"
+                  type="number"
+                  step="0.01"
+                  value={formData.maxPrice}
+                  onChange={(e) => setFormData({ ...formData, maxPrice: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxVolume">Maximum Volume</Label>
+                <Input
+                  id="maxVolume"
+                  type="number"
+                  value={formData.maxVolume}
+                  onChange={(e) => setFormData({ ...formData, maxVolume: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxLeadTime">Maximum Lead Time (weeks)</Label>
+                <Input
+                  id="maxLeadTime"
+                  type="number"
+                  value={formData.maxLeadTimeWeeks}
+                  onChange={(e) => setFormData({ ...formData, maxLeadTimeWeeks: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>

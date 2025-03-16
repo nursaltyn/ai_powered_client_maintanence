@@ -52,12 +52,13 @@ export default function NegotiationList({
     maxPrice: number;
     minVolume: number;
     maxVolume: number;
-    preferredLeadTimeWeeks: number;
+    minLeadTimeWeeks: number;
+    maxLeadTimeWeeks: number;
   }) => {
     onUpdateNegotiation(counterOfferDialog.negotiationId, {
       price: Number(((data.minPrice + data.maxPrice) / 2).toFixed(2)),
       volume: Math.floor((data.minVolume + data.maxVolume) / 2),
-      leadTimeWeeks: data.preferredLeadTimeWeeks,
+      leadTimeWeeks: Math.floor((data.minLeadTimeWeeks + data.maxLeadTimeWeeks) / 2),
     });
     setCounterOfferDialog({ open: false, negotiationId: '', productId: '', currentOffer: null });
   };
@@ -110,8 +111,8 @@ export default function NegotiationList({
                     <p>{negotiation.minVolume} - {negotiation.maxVolume} units</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Preferred Lead Time</p>
-                    <p>{negotiation.preferredLeadTimeWeeks} weeks</p>
+                    <p className="text-muted-foreground">Lead Time Range</p>
+                    <p>{negotiation.minLeadTimeWeeks} - {negotiation.maxLeadTimeWeeks} weeks</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Created</p>

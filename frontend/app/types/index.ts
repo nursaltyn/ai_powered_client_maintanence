@@ -31,7 +31,8 @@ export interface Negotiation {
   maxPrice: number;
   minVolume: number;
   maxVolume: number;
-  preferredLeadTimeWeeks: number;
+  minLeadTimeWeeks: number;
+  maxLeadTimeWeeks: number;
   createdAt: string;
   offers: Offer[];
 }
