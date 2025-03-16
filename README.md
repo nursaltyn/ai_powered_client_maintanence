@@ -18,7 +18,7 @@ ai_powered_client_maintenance/
 │   ├── product_to_vendor.json   # Product to vendor mappings
 │   ├── vendors.csv              # Vendor information
 │
-├── frontend/               # Frontend-related files (empty for now)
+├── frontend/               # Frontend-related files
 │
 ├── .env                    # Environment variables (ignored in Git)
 ├── .gitignore              # Git ignore file
@@ -49,4 +49,20 @@ venv\Scripts\activate      # On Windows
 
 ```
 pip install -r requirements.txt
+```
+
+In the .env file, fill in your API keys. We utillize Mistral and Gemini models.
+
+### 4. Run the app
+
+Run the frontend in the terminal:
+
+```
+npm run dev
+```
+
+Run the backend in the terminal:
+
+```
+fastapi run fastapi_agent_server.py
 ```
