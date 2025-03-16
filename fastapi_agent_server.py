@@ -13,13 +13,22 @@ from fastapi.responses import StreamingResponse
 
 # load credentials
 load_dotenv()
-API_KEY = os.getenv("GOOGLE_API_KEY")
+
+LLM_MODEL = os.getenv("LLM_MODEL")
+
+if LLM_MODEL == "GOOGLE":
+    LLM_MODEL_NAME = os.getenv("GOOGLE_LLM_MODEL")
+    API_KEY = os.getenv("GOOGLE_API_KEY")
+else:
+    LLM_MODEL_NAME = os.getenv("MISTRAL_LLM_MODEL")
+    API_KEY = os.getenv("MISTRAL_API_KEY")
+
 SELLER_ENDPOINT_URL = os.getenv("SELLER_ENDPOINT_URL")
-GOOGLE_LLM_MODEL = os.getenv("GOOGLE_LLM_MODEL")
 
 graph = BuyerWorkflowManager(
     api_key=API_KEY, endpoint_url=SELLER_ENDPOINT_URL,
-    llm_model_name=GOOGLE_LLM_MODEL
+    llm_model_name=LLM_MODEL_NAME,
+    llm_model=LLM_MODEL
 ).returnGraph()
 
 
@@ -38,22 +47,10 @@ app.add_middleware(
 #         try:
 #             for i, step_result in enumerate(graph.stream(request)):
 #                 print(f"Step {i} Output:", step_result)
-#                 yield step_result
+#                 yield step_result  # Ensure step_result is a valid string/JSON
 #         except Exception as e:
-#             raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-#     return StreamingResponse(result_generator(), media_type="application/json")
-
-# @app.post("/call-model")
-# async def call_model(request: BuyerQueryRequest):
-#     async def result_generator():
-#         try:
-#             for i, step_result in enumerate(graph.stream(request)):
-#                 print(f"Step {i} Output:", step_result)
-#                 yield json.dumps(step_result) + "\n"  # Convert to JSON string
-#         except Exception as e:
-#             print(f"Error in streaming: {str(e)}")
-#             yield json.dumps({"error": "Internal server error"}) + "\n"
+#             print(f"Error occurred: {e}")  # Log the error instead of raising HTTPException
+#             yield json.dumps({"error": "An error occurred while processing the request."})
 
 #     return StreamingResponse(result_generator(), media_type="application/json")
 
@@ -61,18 +58,31 @@ app.add_middleware(
 async def call_model(request: BuyerQueryRequest):
     async def result_generator():
         try:
-            yield json.dumps({"status": "streaming started"}) + "\n"  # Ensures immediate response
-            
-            for i, step_result in enumerate(graph.stream(request)):  # Ensure graph.stream() is async iterable
+            for i, step_result in enumerate(graph.stream(request)):
                 print(f"Step {i} Output:", step_result)
-                await asyncio.sleep(0.1)
-                yield json.dumps(step_result) + "\n"
-        
+                yield json.dumps(step_result) + "\n"  # Convert to JSON string
         except Exception as e:
             print(f"Error in streaming: {str(e)}")
             yield json.dumps({"error": "Internal server error"}) + "\n"
 
     return StreamingResponse(result_generator(), media_type="application/json")
+
+# @app.post("/call-model")
+# async def call_model(request: BuyerQueryRequest):
+#     async def result_generator():
+#         try:
+#             yield json.dumps({"status": "streaming started"}) + "\n"  # Ensures immediate response
+            
+#             for i, step_result in enumerate(graph.stream(request)):  # Ensure graph.stream() is async iterable
+#                 print(f"Step {i} Output:", step_result)
+#                 await asyncio.sleep(0.1)
+#                 yield json.dumps(step_result) + "\n"
+        
+#         except Exception as e:
+#             print(f"Error in streaming: {str(e)}")
+#             yield json.dumps({"error": "Internal server error"}) + "\n"
+
+#     return StreamingResponse(result_generator(), media_type="application/json")
 
 
 def call_negotiator_model(request: BuyerQueryRequest):

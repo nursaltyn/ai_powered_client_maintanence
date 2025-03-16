@@ -48,7 +48,8 @@ buyer_query_request = BuyerQueryRequest(
 )
 
 # sample input:
-# sample_input = {
+# sample_input = 
+# {
 #     "buyer_name": "Jason",
 #     "buyer_id": "B123",
 #     "buyer_type": "Medium-Sized Business",

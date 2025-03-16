@@ -4,9 +4,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
 class BuyerMessenger:
-    def __init__(self, seller_endpoint_url, llm_api_key, llm_model_name):
+    def __init__(self, seller_endpoint_url, llm_api_key, llm_model_name, llm_model):
         self.endpoint_url = seller_endpoint_url
-        self.llm_manager = LLMManager(api_key=llm_api_key, llm_model_name=llm_model_name)
+        self.llm_manager = LLMManager(api_key=llm_api_key, 
+                                      llm_model_name=llm_model_name, 
+                                      llm_model=llm_model)
 
     def get_negotiation_offer(self, negotiation_uuid: str) -> str:
         """Get a negotiation offer from the seller"""
@@ -18,18 +20,6 @@ class BuyerMessenger:
             return response.json()['results']
         except requests.RequestException as e:
             raise Exception(f"Error fetching schema: {str(e)}")
-        
-    # def send_negotiation_offer(self, negotiation_offer: dict, negotiation_uuid: str) -> str:
-    #     """Send a negotiation offer to the seller"""
-    #     try:
-    #         response = requests.post(
-    #             f"{self.endpoint_url}/send_negotiation_offer",
-    #             json={"negotiation_offer": negotiation_offer, "negotiation_uuid": negotiation_uuid}
-    #         )
-    #         response.raise_for_status()
-    #         return response.json()['results']
-    #     except requests.RequestException as e:
-    #         raise Exception(f"Error executing query: {str(e)}")
 
     def send_negotiation_offer(self, buyer_negotiation_offer: dict, 
                                previous_seller_offer: dict,

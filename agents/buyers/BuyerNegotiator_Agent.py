@@ -6,11 +6,12 @@ from agents.LLMManager import LLMManager
 from datetime import datetime
 
 class BuyerNegotiatorAgent:
-    def __init__(self, API_KEY, SELLER_ENDPOINT_URL, LLM_MODEL_NAME):
+    def __init__(self, API_KEY, SELLER_ENDPOINT_URL, LLM_MODEL_NAME, LLM_MODEL):
         self.buyer_messenger = BuyerMessenger(seller_endpoint_url=SELLER_ENDPOINT_URL,
                                               llm_api_key=API_KEY, 
-                                              llm_model_name=LLM_MODEL_NAME)
-        self.llm_manager = LLMManager(api_key=API_KEY, llm_model_name=LLM_MODEL_NAME)
+                                              llm_model_name=LLM_MODEL_NAME,
+                                              llm_model=LLM_MODEL)
+        self.llm_manager = LLMManager(api_key=API_KEY, llm_model_name=LLM_MODEL_NAME, llm_model=LLM_MODEL)
 
     def get_product_demand_forecast(self, state: dict) -> dict:
         """Forecast product demand based on historical sales data."""

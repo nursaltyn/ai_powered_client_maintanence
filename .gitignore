@@ -41,5 +41,5 @@ yarn.lock
 turbo/
 
 
-.env
+*.env
 *.pyc

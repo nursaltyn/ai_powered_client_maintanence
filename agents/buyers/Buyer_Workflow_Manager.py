@@ -5,10 +5,11 @@ from langgraph.graph import END
 from typing import List
 
 class WorkflowManager:
-    def __init__(self, api_key: str, endpoint_url:str, llm_model_name:str):
+    def __init__(self, api_key: str, endpoint_url:str, llm_model_name:str, llm_model:str):
         self.negotiator_agent = BuyerNegotiatorAgent(API_KEY=api_key, 
                                                      SELLER_ENDPOINT_URL=endpoint_url,
-                                                     LLM_MODEL_NAME=llm_model_name)
+                                                     LLM_MODEL_NAME=llm_model_name,
+                                                     LLM_MODEL=llm_model)
 
     def create_workflow(self) -> StateGraph:
         """Create and configure the workflow graph."""
