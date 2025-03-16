@@ -1,5 +1,5 @@
 
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import JsonOutputParser
 from src.agents.buyers.Buyer_Messenger import BuyerMessenger
 from src.agents.LLMManager import LLMManager
@@ -70,7 +70,8 @@ class BuyerNegotiatorAgent:
         # create a negotiation id from current timestamp YYMMDDHHMMSS
         negotiation_id = datetime.now().strftime("%Y%m%d%H%M%S")
         state["negotiation_id"] = negotiation_id
-
+        state["negotiation_history_buyer"]={}
+        state["negotiation_history_seller"]={}
 
         prompt = ChatPromptTemplate.from_messages([
             ("system", '''You are an expert negotiator specializing in analyzing buyer preferences, product demand forecasts, and negotiation parameters to provide optimal offers. 
@@ -125,13 +126,23 @@ class BuyerNegotiatorAgent:
         print(f"Negotiation status: {state['agreement_reached']}")
         print(f"Offer from buyer: {state['current_negotiation_offer_buyer']}")
         print(f"Offer from seller: {state['current_negotiation_offer_seller']}")
+        # print(f"Buyer negotiation history: {state["negotiation_history_buyer"]}")
+        # print(f"Seller negotiation history: {state["negotiation_history_seller"]}")
         print("===========================")
+
+        state["negotiation_history_buyer"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): negotiation_offer_buyer})
+        state["negotiation_history_seller"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): seller_response["negotiation_offer_seller"]})
+
+        # print(f"Buyer negotiation history: {state["negotiation_history_buyer"]}")
+        # print(f"Seller negotiation history: {state["negotiation_history_seller"]}")
 
         return {"negotiation_id": negotiation_id, 
                 "negotiation_attempts": state.get("negotiation_attempts", 0) + 1,
                 "current_negotiation_offer_buyer": negotiation_offer_buyer, 
                 "current_negotiation_offer_seller": seller_response["negotiation_offer_seller"],
-                "agreement_reached": seller_response["agreement_reached"]}
+                "agreement_reached": seller_response["agreement_reached"],
+                "negotiation_history_buyer": state["negotiation_history_buyer"],
+                "negotiation_history_seller": state["negotiation_history_seller"]}
 
     def generate_email_client(self, state: dict):
         
@@ -171,6 +182,9 @@ class BuyerNegotiatorAgent:
         previous_negotiation_offer = state["current_negotiation_offer_buyer"]
         negotiation_id = previous_negotiation_offer["negotiation_id"]
 
+        negotiation_history_buyer = state["negotiation_history_buyer"],
+        negotiation_history_seller = state["negotiation_history_seller"]
+
         # Extract buyer and negotiation parameters
         parameters = {
             "buyer_preferences": {key: state[key] for key in ["negotiation_style", "buyer_type", "price_sensitivity"]},
@@ -185,13 +199,21 @@ class BuyerNegotiatorAgent:
 
 
         prompt = ChatPromptTemplate.from_messages([
-            ("system", '''You are an expert negotiator specializing in analyzing buyer preferences, product demand forecasts, and negotiation parameters to provide optimal offers. 
-            Your previous negotiation offer was: {previous_negotiation_offer_by_buyer}
+            ("system", '''You are an expert negotiator representing the buyer in a structured negotiation process.
+            CONTEXT:
+                - Your previous offer was: {previous_negotiation_offer_by_buyer}
+                - The seller countered with: {counter_seller_offer}
+            
+             Here is the history of negotiations that took place between you and the seller:
+             Your negotiation history:
+             {negotiation_history_buyer}
              
-             However, it was rejected by the seller with a counter offer: {counter_seller_offer}
-
-            Now your task is to reevaluate the seller's counteroffer and negotiate a better deal by proposing a revised offer that optimally adjusts price per unit, lead time, order quantity, and payment terms. 
-            The new offer should align with the buyer's requirements, consider product demand and constraints, and maximize value while increasing the likelihood of acceptance.
+             Seller's negotiation history:
+             {negotiation_history_seller}
+             
+             TASK: 
+             Analyze the seller's counteroffer and determine whether to accept it or provide a strategic counteroffer that optimizes the buyer's position.
+             You may consider increasing order quantity size if the seller doesn't decrease the price per unit.           
 
             Consider the following parameters:
             - Buyer preferences: negotiation_style, buyer_type, price_sensitivity
@@ -220,7 +242,7 @@ class BuyerNegotiatorAgent:
             }}
 
             Only respond with the JSON object and no additional text or explanations.'''),
-            ("human", '''Given the following parameters:
+            ("human", '''Below are the following buyer parameters:
             {parameters}
 
         Propose a new negotiation offer in suggested JSON format.''')
@@ -231,13 +253,18 @@ class BuyerNegotiatorAgent:
         response = self.llm_manager.invoke(prompt, parameters=parameters, 
                                            previous_negotiation_offer_by_buyer=state['current_negotiation_offer_buyer'], 
                                            counter_seller_offer=state['current_negotiation_offer_seller'], 
+                                           negotiation_history_buyer=state['negotiation_history_buyer'],
+                                           negotiation_history_seller=state['negotiation_history_seller'],                                           
                                            response_format={"type": "json_object"})
+        
         negotiation_offer_buyer = output_parser.parse(response)
         negotiation_offer_buyer["negotiation_id"] = negotiation_id
 
         # send negotiation request to seller
         seller_response = self.buyer_messenger.send_negotiation_offer(buyer_negotiation_offer=negotiation_offer_buyer,
-                                                                      previous_seller_offer=state["current_negotiation_offer_seller"])
+                                                                      previous_seller_offer=state["current_negotiation_offer_seller"],
+                                                                      negotiation_history_buyer=negotiation_history_buyer,
+                                                                      negotiation_history_seller=negotiation_history_seller)
 
         state["agreement_reached"] = seller_response["agreement_reached"]
         state["current_negotiation_offer_seller"] = seller_response["negotiation_offer_seller"]
@@ -254,11 +281,15 @@ class BuyerNegotiatorAgent:
         print(f"Offer from seller: {state['current_negotiation_offer_seller']}")
         print("===========================")
 
+        state["negotiation_history_buyer"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): negotiation_offer_buyer})
+        state["negotiation_history_seller"].update({"attempt_"+str(state.get("negotiation_attempts", 0)): seller_response["negotiation_offer_seller"]})
         
         return {"negotiation_id": negotiation_id, 
                 "negotiation_attempts": state.get("negotiation_attempts", 0) + 1,
                 "current_negotiation_offer_buyer": negotiation_offer_buyer, 
                 "current_negotiation_offer_seller": seller_response["negotiation_offer_seller"],
-                "agreement_reached": seller_response["agreement_reached"]}
+                "agreement_reached": seller_response["agreement_reached"],
+                "negotiation_history_buyer": state["negotiation_history_buyer"],
+                "negotiation_history_seller": state["negotiation_history_seller"]}
 
 

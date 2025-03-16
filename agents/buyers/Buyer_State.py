@@ -63,6 +63,9 @@ class BuyerNegotiatorState(TypedDict):
     # intermediate negotiation decisions
     current_negotiation_offer_buyer: str
     current_negotiation_offer_seller: str
+    negotiation_history_buyer: dict
+    negotiation_history_seller: dict
+
 
     # final negotiation decisions
     final_negotiation_decision_buyer: str

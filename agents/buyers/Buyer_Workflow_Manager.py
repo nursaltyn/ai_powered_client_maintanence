@@ -33,13 +33,23 @@ class WorkflowManager:
         #     {"generate_email_client": "generate_email_client", END: END, "continue_negotiation": "continue_negotiation"}
         # )
 
+        workflow.add_edge("initiate_negotiation", "continue_negotiation")
+
+    #     workflow.add_conditional_edges(
+    #     "initiate_negotiation",
+    #     lambda state: (
+    #         "generate_email_client" if state["agreement_reached"] else 
+    #         ("continue_negotiation" if state["negotiation_attempts"] < state["max_negotiation_attempts"] else END)
+    #     ),
+    #     {"generate_email_client": "generate_email_client", END: END, "continue_negotiation": "continue_negotiation"}
+    # )
         workflow.add_conditional_edges(
-        "initiate_negotiation",
+        "continue_negotiation",
         lambda state: (
-            "generate_email_client" if state["agreement_reached"] else 
+            "generate_email_client" if state["agreement_reached"] else
             ("continue_negotiation" if state["negotiation_attempts"] < state["max_negotiation_attempts"] else END)
         ),
-        {"generate_email_client": "generate_email_client", END: END, "continue_negotiation": "initiate_negotiation"}
+        {"generate_email_client": "generate_email_client", END: END, "continue_negotiation": "continue_negotiation"}
     )
 
 

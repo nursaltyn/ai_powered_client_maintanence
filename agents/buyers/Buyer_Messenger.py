@@ -33,7 +33,9 @@ class BuyerMessenger:
 
     def send_negotiation_offer(self, buyer_negotiation_offer: dict, 
                                previous_seller_offer: dict,
-                               initial_offer: bool = False) -> str:
+                               initial_offer: bool = False,
+                               negotiation_history_buyer: dict = None,
+                               negotiation_history_seller: dict = None) -> str:
         """Send a negotiation offer to the seller"""
 
         if initial_offer:
@@ -71,6 +73,14 @@ class BuyerMessenger:
                 CONTEXT:
                 - Your previous offer was: {previous_seller_offer}
                 - The buyer countered with: {buyer_negotiation_offer}
+
+                 
+                Here is the history of negotiations that took place between you and the buyer:
+                Your negotiation history:
+                {negotiation_history_seller}
+                
+                Buuyer's negotiation history:
+                {negotiation_history_buyer}
 
                 TASK:
                 Analyze the buyer's counteroffer and determine whether to accept it or provide a strategic counteroffer that optimizes the seller's position.
@@ -113,6 +123,8 @@ class BuyerMessenger:
         response = self.llm_manager.invoke(prompt, 
                                             previous_seller_offer=previous_seller_offer, 
                                             buyer_negotiation_offer=buyer_negotiation_offer, 
+                                            negotiation_history_seller=negotiation_history_seller,
+                                            negotiation_history_buyer=negotiation_history_buyer,
                                             response_format={"type": "json_object"})
         parsed_response = output_parser.parse(response)
         return parsed_response
